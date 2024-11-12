@@ -26,6 +26,6 @@ resource "confluent_kafka_cluster" "pl_prototype_cluster" {
   enterprise {}
 
   environment {
-    id = confluent_environment.development.id
+    id = confluent_environment.privatelink_prototype.id
   }
 }
