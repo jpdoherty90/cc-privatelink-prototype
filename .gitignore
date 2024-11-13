@@ -1,4 +1,5 @@
 env_vars.sh
+scratch.txt
 
 # Local .terraform directories
 **/.terraform/*
