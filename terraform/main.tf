@@ -20,9 +20,7 @@ resource "confluent_environment" "privatelink_prototype" {
 
 resource "confluent_kafka_cluster" "pl_prototype_cluster" {
   display_name = "pl-prototype-cluster"
-  # Using single zone because this is a prototype
-  # Multi zone recommended in prod
-  availability = "SINGLE_ZONE"
+  availability = "MULTI_ZONE"
   cloud        = "AWS"
   region       = "us-east-2"
   dedicated {
@@ -33,3 +31,13 @@ resource "confluent_kafka_cluster" "pl_prototype_cluster" {
     id = confluent_environment.privatelink_prototype.id
   }
 }
+
+
+/*
+The steps for setting up AWS PrivateLink connection to Confluent Cloud are:
+1. Create confluent_network resource
+2. Add confluent_private_link_access resource
+3. Provision PrivateLink endpoints in AWS
+4. Set up DNS records in AWS
+5. Test PrivateLink connectivity to Confluent Cloud
+*/
