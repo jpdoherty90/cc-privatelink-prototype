@@ -20,10 +20,14 @@ resource "confluent_environment" "privatelink_prototype" {
 
 resource "confluent_kafka_cluster" "pl_prototype_cluster" {
   display_name = "pl-prototype-cluster"
-  availability = "HIGH"
+  # Using single zone because this is a prototype
+  # Multi zone recommended in prod
+  availability = "SINGLE_ZONE"
   cloud        = "AWS"
   region       = "us-east-2"
-  enterprise {}
+  dedicated {
+    cku = 2
+  }
 
   environment {
     id = confluent_environment.privatelink_prototype.id
