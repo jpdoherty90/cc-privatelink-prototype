@@ -26,7 +26,7 @@ resource "confluent_network" "aws_private_link" {
   connection_types = ["PRIVATELINK"]
   zones            = ["use2-az1", "use2-az2", "use2-az3"]
   environment {
-    id = confluent_environment.development.id
+    id = confluent_environment.privatelink_prototype.id
   }
 }
 
