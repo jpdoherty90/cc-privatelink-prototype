@@ -72,19 +72,12 @@ resource "confluent_kafka_cluster" "pl_prototype_cluster" {
   }
 }
 
-# STEP 3: Create a VPC in AWS 
-resource "aws_vpc" "pl_prototype_vpc" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-
-  tags = {
-    Name       = "pl-prototype-vpc"
-    created_by = "terraform"
-  }
-}
 
 
-# STEP 4: Add confluent_private_link_access resource
+
+# STEP 3: Add confluent_private_link_access resource
+# Remember: 1 private link access to CC is linked to 1 AWS account ID
+# If you need to connect from multiple accounts, create multiple accesses on network
 resource "confluent_private_link_access" "aws" {
   display_name = "AWS Private Link Access"
   aws {
@@ -98,3 +91,18 @@ resource "confluent_private_link_access" "aws" {
   }
 
 }
+
+
+# STEP 4: Create a VPC in AWS 
+resource "aws_vpc" "pl_prototype_vpc" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+
+  tags = {
+    Name       = "pl-prototype-vpc"
+    created_by = "terraform"
+  }
+}
+
+
+
