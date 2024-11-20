@@ -33,10 +33,11 @@ At a high level, the steps for setting up AWS PrivateLink connection to Confluen
 2. Create a Dedicated kafka cluster with that network
 3. Add confluent_private_link_access resource
 4. Create a VPC in AWS
-5. Create subnnets in your VPC
-5. Provision PrivateLink endpoints in AWS
-6. Set up DNS records in AWS
-7. Test PrivateLink connectivity to Confluent Cloud
+5. Create segurity group w/ rules
+6. Create subnnets in your VPC
+7. Provision PrivateLink endpoints in AWS
+8. Set up DNS records in AWS
+9. Test PrivateLink connectivity to Confluent Cloud
 */
 
 
@@ -97,7 +98,7 @@ resource "confluent_private_link_access" "aws" {
 
 # STEP 4: Create a VPC in AWS 
 resource "aws_vpc" "pl_prototype_vpc" {
-  cidr_block           = var.vpc_cidr
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
@@ -107,47 +108,83 @@ resource "aws_vpc" "pl_prototype_vpc" {
 }
 
 
-# STEP 5: Create subnnets in your VPC
-resource "aws_subnet" "pl_prototype_subnet_az1" {
+# STEP 5: Create a security group w/ ingress/egress rules
+resource "aws_security_group" "cc_pl_endpoint_sg" {
+  name        = "cc-pl-endpoint-sg"
+  vpc_id      = aws_vpc.pl_prototype_vpc.id
+
+  ingress {
+    from_port        = 9092
+    to_port          = 9092
+    protocol         = "tcp"
+    cidr_blocks      = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["10.0.0.0/16"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+
+
+
+# STEP 6: Create subnnets in your VPC
+resource "aws_subnet" "pl_prototype_subnet_a" {
   vpc_id            = aws_vpc.pl_prototype_vpc.id
-  cidr_block        = var.pl_prototype_subnet_1_cidr
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-east-2a"
 
   tags = {
-    Name       = "pl_prototype_subnet_az1"
-    created_by = "terraform"
+    Name       = "pl_prototype_subnet_a"
   }
 }
-
-resource "aws_subnet" "pl_prototype_subnet_az1" {
+resource "aws_subnet" "pl_prototype_subnet_b" {
   vpc_id            = aws_vpc.pl_prototype_vpc.id
-  cidr_block        = var.pl_prototype_subnet_2_cidr
+  cidr_block        = "10.0.2.0/24"
   availability_zone = "us-east-2b"
 
   tags = {
-    Name       = "pl_prototype_subnet_az2"
-    created_by = "terraform"
+    Name       = "pl_prototype_subnet_b"
   }
 }
-
-resource "aws_subnet" "pl_prototype_subnet_az1" {
+resource "aws_subnet" "pl_prototype_subnet_c" {
   vpc_id            = aws_vpc.pl_prototype_vpc.id
-  cidr_block        = var.pl_prototype_subnet_3_cidr
+  cidr_block        = "10.0.3.0/24"
   availability_zone = "us-east-2c"
 
   tags = {
-    Name       = "pl_prototype_subnet_az3"
-    created_by = "terraform"
+    Name       = "pl_prototype_subnet_c"
   }
 }
 
 
-# STEP 5: Create VPC endpoint in AWS
+# STEP 7: Create VPC endpoint in AWS
 resource "aws_vpc_endpoint" "cc_pl_endpoint" {
   vpc_id       = aws_vpc.pl_prototype_vpc.id
-  # This service_name is the same as the output in outputs.tf
-  # We reference it directly here, but provide it as output as well in case you are creating endpoint manually
   service_name = confluent_network.aws_private_link.aws[0].private_link_endpoint_service
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [aws_security_group.cc_pl_endpoint_sg.id]
+  subnet_ids = [
+    aws_subnet.pl_prototype_subnet_a,
+    aws_subnet.pl_prototype_subnet_b,
+    aws_subnet.pl_prototype_subnet_c,
+  ]
 
   tags = {
     Name = "pl-prototype-endpoint"
