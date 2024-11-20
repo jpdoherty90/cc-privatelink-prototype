@@ -181,9 +181,9 @@ resource "aws_vpc_endpoint" "cc_pl_endpoint" {
   vpc_endpoint_type = "Interface"
   security_group_ids = [aws_security_group.cc_pl_endpoint_sg.id]
   subnet_ids = [
-    aws_subnet.pl_prototype_subnet_a,
-    aws_subnet.pl_prototype_subnet_b,
-    aws_subnet.pl_prototype_subnet_c,
+    aws_subnet.pl_prototype_subnet_a.id,
+    aws_subnet.pl_prototype_subnet_b.id,
+    aws_subnet.pl_prototype_subnet_c.id,
   ]
 
   tags = {
