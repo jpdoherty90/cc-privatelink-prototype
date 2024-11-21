@@ -220,12 +220,18 @@ resource "aws_iam_policy_attachment" "producer_ssm_core_attachment" {
 }
 
 
+resource "aws_iam_instance_profile" "producer_ssm_instance_profile" {
+  name = "ProducerSSMInstanceProfile"
+  role = aws_iam_role.producer_ssm_role.name
+}
+
 
 # STEP : Create an EC2 to run your python producer in
 resource "aws_instance" "python_producer_ec2" {
   ami           = "ami-0942ecd5d85baa812" # us-east-2
   instance_type = "t3.small"
   subnet_id = aws_subnet.pl_prototype_subnet_a.id
+  iam_instance_profile = aws_iam_instance_profile.producer_ssm_instance_profile.name
 
   tags = {
     Name = "PythonProducerInstance"
