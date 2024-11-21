@@ -212,18 +212,6 @@ resource "aws_iam_role" "producer_ssm_role" {
 
 }
 
-# Policy attachement that attaches appropriate policy to the role above
-resource "aws_iam_policy_attachment" "producer_ssm_core_attachment" {
-  name       = "producer-ssm-core-attachment"
-  roles      = [aws_iam_role.producer_ssm_role.name]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-
-resource "aws_iam_instance_profile" "producer_ssm_instance_profile" {
-  name = "ProducerSSMInstanceProfile"
-  role = aws_iam_role.producer_ssm_role.name
-}
 
 
 # STEP : Create an EC2 to run your python producer in
