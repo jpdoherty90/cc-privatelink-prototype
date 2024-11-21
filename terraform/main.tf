@@ -146,7 +146,7 @@ resource "aws_security_group" "cc_pl_endpoint_sg" {
 # STEP 6: Create subnnets in your VPC
 resource "aws_subnet" "pl_prototype_subnet_a" {
   vpc_id            = aws_vpc.pl_prototype_vpc.id
-  cidr_block        = "10.0.1.0/24"
+  cidr_block        = "10.0.10.0/24"
   availability_zone = "us-east-2a"
 
   tags = {
@@ -155,7 +155,7 @@ resource "aws_subnet" "pl_prototype_subnet_a" {
 }
 resource "aws_subnet" "pl_prototype_subnet_b" {
   vpc_id            = aws_vpc.pl_prototype_vpc.id
-  cidr_block        = "10.0.2.0/24"
+  cidr_block        = "10.0.20.0/24"
   availability_zone = "us-east-2b"
 
   tags = {
@@ -164,7 +164,7 @@ resource "aws_subnet" "pl_prototype_subnet_b" {
 }
 resource "aws_subnet" "pl_prototype_subnet_c" {
   vpc_id            = aws_vpc.pl_prototype_vpc.id
-  cidr_block        = "10.0.3.0/24"
+  cidr_block        = "10.0.30.0/24"
   availability_zone = "us-east-2c"
 
   tags = {
@@ -192,13 +192,42 @@ resource "aws_vpc_endpoint" "cc_pl_endpoint" {
 
 
 
-# STEP 8: Create an EC2 to run your python producer in
+
+# IAM role that allows EC2 instance to communicate with AWS Systems Manager
+resource "aws_iam_role" "producer_ssm_role" {
+  name = "producer_ssm_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+}
+
+# Policy attachement that attaches appropriate policy to the role above
+resource "aws_iam_policy_attachment" "producer_ssm_core_attachment" {
+  name       = "producer-ssm-core-attachment"
+  roles      = [aws_iam_role.producer_ssm_role.name]
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+
+
+# STEP : Create an EC2 to run your python producer in
 resource "aws_instance" "python_producer_ec2" {
   ami           = "ami-0942ecd5d85baa812" # us-east-2
   instance_type = "t3.small"
   subnet_id = aws_subnet.pl_prototype_subnet_a.id
 
-  tags {
+  tags = {
     Name = "PythonProducerInstance"
   }
 }
