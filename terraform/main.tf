@@ -36,8 +36,7 @@ At a high level, the steps for setting up AWS PrivateLink connection to Confluen
 5. Create segurity group w/ rules
 6. Create subnnets in your VPC
 7. Provision PrivateLink endpoints in AWS
-8. Set up DNS records in AWS
-9. Test PrivateLink connectivity to Confluent Cloud
+8. Setup an EC2 instance in your VPC to test connectivity
 */
 
 
@@ -188,5 +187,18 @@ resource "aws_vpc_endpoint" "cc_pl_endpoint" {
 
   tags = {
     Name = "pl-prototype-endpoint"
+  }
+}
+
+
+
+# STEP 8: Create an EC2 to run your python producer in
+resource "aws_instance" "python_producer_ec2" {
+  ami           = "ami-0942ecd5d85baa812" # us-east-2
+  instance_type = "t3.small"
+  subnet_id = aws_subnet.pl_prototype_subnet_a.id
+
+  tags {
+    Name = "PythonProducerInstance"
   }
 }
