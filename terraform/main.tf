@@ -191,8 +191,6 @@ resource "aws_vpc_endpoint" "cc_pl_endpoint" {
 }
 
 
-
-
 # IAM role that allows EC2 instance to communicate with AWS Systems Manager
 resource "aws_iam_role" "producer_ssm_role" {
   name = "producer_ssm_role"
@@ -213,14 +211,15 @@ resource "aws_iam_role" "producer_ssm_role" {
 }
 
 
-
-
 resource "aws_iam_role_policy_attachment" "producer_ssm_core" {
-  role = aws_iam_role.producer_ssm_role
+  role = aws_iam_role.producer_ssm_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-
+resource "aws_iam_instance_profile" "producer_instance_profile" {
+  name = "ProducerInstanceProfile"
+  role = aws_iam_role.producer_ssm_role.name
+}
 
 
 
@@ -231,6 +230,14 @@ resource "aws_instance" "python_producer_ec2" {
   ami           = "ami-0942ecd5d85baa812" # us-east-2
   instance_type = "t3.small"
   subnet_id = aws_subnet.pl_prototype_subnet_a.id
+  iam_instance_profile = aws_iam_instance_profile.producer_instance_profile.name
+
+  user_data = <<-EOF
+    #!/bin/bash
+    sudo yum update -y
+    sudo systemctl enable amazon-ssm-agent
+    sudo systemctl start amazon-ssm-agent
+  EOF
 
   tags = {
     Name = "PythonProducerInstance"
